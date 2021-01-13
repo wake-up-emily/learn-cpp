@@ -1,0 +1,185 @@
+c++细节
+- 第二章 变量和基本类型
+	- 基本内置类型
+		- 整型
+			- 八进制 0开头 最多\后能读三位 "\1234" // "s4"
+			- 16进制 0x开头 \后四位
+	- 变量
+		- 初始值
+			- 列表初始化 {} 尤其编译期规避类型转换时信息丢失的风险
+			- 全局变量int 初始值为0 main函数体内部int不被初始化 尝试拷贝或输出时会输出一个未定义的奇异值（1）
+	- 指针
+		- Nullptr
+		- 指针和引用的区别
+			- 指针是对象 允许拷贝和赋值 可多次赋值 可无初始值
+			- 引用不是对象 只能绑定一次 必须有初始值
+		- 指向指针的
+			- 指针 ** ***
+			- 引用 不仅改变指针所指的对象 也改变指针本身 （因为指向指针的引用就代表了指针）
+	- const
+		- extern 暴露变量
+		- 常量引用 
+			- const int 不允许通过这个引用改变原值 多个引用存在时 可以通过别的引用（或者原值）修改原值
+			- int &r = 0 不可 const int &r =0 可
+		- 常量指针 
+			- const int *p = 42; const int *const p = 42; 新加的const保证p永远指向42
+			- const int *const p3 = &v p3永远指向变量v，且p3指向常量，无法通过p3修改v的值
+			- 常量指针不能被赋值 初始化如果没有值就只能一直没有值
+		- 顶层const/底层const
+			- const int *const p = 42; 右边顶层（p是常量），左边底层（对象是常量）
+			- 拷贝操作时 顶层const不受影响 底层const要求左值和右值有相同的底层const资格 或右值可转换成左值的数据类型
+			- const int 指针指到普通 int 是可以通过编译 但是 对象 还是int 以对象的意愿来说 它还是可以改值的
+				int v = 42;
+	    		const int *p = &v;
+	    		v = 1024;
+	    		cout << *p << endl; // p=1024
+	    - constexpr 
+	    	- 常量表达式
+	    	- constexpr int *p 等价于 int *const p 把p置为顶层const
+	- 处理类型
+		- typedef/using
+			- 使用
+				- typedef double wages;
+				- using wages = double;
+			- 别名指代复合类型或常量时要小心
+				typedef char *pstring
+				const pstring cstr = 0; //cstr是指向char的常量指针
+				const char *cstr = 0; //把char直接替换过去解读是不行的 这样cstr是指向const char类型的指针
+		- auto
+			- 一条语句只有一个数据类型
+			- 忽略顶层const
+			- 实际计算变量的初始值后推断类型
+		- decltype
+			- (()) 结果永远是引用
+			- 保留顶层const
+			- 不计算表达式的值 类型推导
+- 第三章 字符串 向量 和数组
+	- string
+		- getline(cin,line)
+		- .empty()
+		- .size() 类型是size_type std中可以记录任意长度的string的无符号类型
+		- + 
+			- 运算符要求等式右边至少有一个是string类型 string s = "hello" + "world"是不行的
+			- 连续 + 是从左往右 string p2 = (p1 + "hello ") + "world" 也符合上一条规范 string p2 = "hello " + "world " + s 就不行
+		- string和char是两种类型 char使用 '' string使用""
+		- cctype头文件中的一堆bool函数 eg. .isspace(c), .isgragh(c)不是空格但可以打印 .isxdigit(c)是16进制数字
+		- for
+		- [] 无符号
+	- vector
+		- {} 列表 vector<string> s{10} 有10个元素 初始值都是结尾为\0的空字符串
+		- .push_back()
+		- [] 无符号
+		- iterator 
+			- v.begin(), v.end()
+			- ->
+			- begin + (end - begin)/2 or (begin + end)/2
+	- array
+		- init
+			- int (*p)[10] = &arr
+			- int (&r)[10] = arr
+		- [] 有符号
+		- iterator
+			- begin(ia), end(ia)
+		- 多维数组
+			- init
+				- int ia[row][col] 二维数组
+				- int ia[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11} or int ia[3][4] = {{0,1,2,3},{4,5,6,7},{8,9,10,11}}
+				- int (*p)[col] = ia 即 int (*p)[col] = &ia[0] //指针默认指向数组的首元素地址
+				- int (&r)[col] = ia[1]
+			- for
+				- for (auto &row : ia) { //除了最内层循环 其他所有循环的控制变量都要求是引用型 否则外层循环中row被解释为int * 即数组首元素的指针 内层循环并不合法
+- 第四章 表达式
+	- ++
+		- 后++ *p++在循环中是高效的写法
+	- 逻辑运算符
+	- 位运算符 & | ^(异或 11=0 其余为1)
+	- 左移右移
+	- sizeof
+	- 类型转换
+		- 强转
+			- static_cast
+			- const_cast
+			- （reinterpret_cast）不建议使用 太容易出错了
+	- 运算符优先级
+- 第五章 语句
+	- {} 作用域
+	- 条件语句
+		- if
+		- case
+			- char cin.get() 和 cin >> c 有区别 前者统计不到\t \n 空格之类的
+			- 多个case同一出口可以合并
+			- case标签必须是常量表达式
+	- 循环语句
+		- while
+		- do while
+		- for
+	- 跳转语句
+		- break
+		- continue
+	- try catch
+		- 标准库定义的标准异常
+	- throw
+- 第六章 函数
+	- 基础
+		- 形参/实参
+		- 局部对象
+			- 局部静态对象
+		- 函数声明
+			- 头文件&源文件放什么
+	- 参数传递
+		- 值传递 形参和实参是分开独立的对象 即离开函数作用域后实参没有影响
+		- 引用传递 形参通过调用实参的引用达到修改实参的目的 或通过增加引用型参数的方式 达到返回多于一个值的效果 本质还是写
+		- 常值引用 函数无意对实参进行修改 在实参值较大的情况下 避免拷贝原值 更快地调用实参 达到读的目的
+		- 数组形参
+			- 传指针
+				- 数组都是以指针的形式传递的 只有地址 不知道数组的具体大小
+				- void print(const int arr[]) 等价于 void print(const int arr[10]) 实参都是 const int * 类型的
+			- 传引用
+			- 传多维数组
+				- int (*matrix)[10] 代表一个指针指向int[10]的数组
+				- int *matrix[10] 	代表一个数组 包含10个int型的元素
+				- int matrix[][10] 	代表一个数组 包含10个int型的元素
+		- main 命令行debug argc argv参数
+		- 可变形参
+		- 省略符形参
+	- 返回类型和return语句
+		- 返回语句可以用三元运算符
+		- 不要返回局部对象的引用或指针
+		- 引用返回左值
+		- 递归
+		- 返回数组指针
+			- using
+			- 尾置返回类型
+			- decltype
+	-函数重载
+		- const
+		- 函数匹配
+		- 重载确定
+	- 特殊用途语言特性
+		- 默认实参
+			- 放最后 一个参数带默认实参 其后的所有参数都必须带默认实参
+		- 内联函数 inline
+			- 你向编译器请求内联 编译器会看情况看决定是否内联
+			- 适用于优化规模较小（75行内） 流程直接 频繁调用的函数 比如函数还调用了标准库的函数 那显然就不算是可以内联了
+		- constexpr
+			- 隐式指定为inline函数
+			- 不一定返回常量表达式 当不是的时候 编译不会通过
+		- 预处理器
+			- assert
+			- __FILE__
+			- __LINE__
+			- __TIME__
+			- __DATE__ //现代编译器其实有cover这部分
+	- 函数匹配
+		- 候选函数
+		- 可行函数
+			- 二义性调用
+			- 实参类型转换
+				- 类型提升
+				- 算数类型转换
+				- const转换
+				- 类类型转换
+	- 函数指针
+		- using
+		- 尾置返回类型
+		- decltype
