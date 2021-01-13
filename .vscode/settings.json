@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "ostream": "cpp",
+        "iosfwd": "cpp",
+        "csales_data": "cpp",
+        "iomanip": "cpp",
+        "vector": "cpp"
+    }
+}

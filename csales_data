@@ -1,0 +1,88 @@
+#ifndef CSALES_DATA
+#define CSALES_DATA
+#include <iostream> // Include for I/O streams
+using namespace std; // Streams are in the std namespace (standard library)
+#include <string>
+
+struct Sales_data
+/*
+* >> << += == != = 
+*/
+{
+    friend istream& operator >> (istream&, Sales_data&);
+    friend ostream& operator << (ostream&, const Sales_data&);
+    friend bool operator < (const Sales_data&, const Sales_data&);
+    friend bool operator == (const Sales_data&, const Sales_data&);
+
+    public:
+        Sales_data() = default;
+        Sales_data(const string& book) 
+        : book_isbn(book) {}
+        Sales_data(istream& is) { is >> *this; }
+    public:
+        Sales_data& operator += (const Sales_data&); //不能放在结构体外面: too few params for this operator
+        string isbn() const {return book_isbn;}
+    private:
+        string book_isbn;
+        unsigned units_sold = 0;
+        double sale_price = 0;
+        double selling_price = 0;
+        double revenue = 0;
+        double discount = 0;
+};
+
+inline bool compare_isbn(const Sales_data& lhs, const Sales_data& rhs) {
+    return lhs.isbn() == rhs.isbn();
+}
+
+//不能用inline因为会出现临时变量
+//不能放在结构体里面: too more params for this operator
+Sales_data operator + (const Sales_data&, const Sales_data&); 
+
+inline bool operator == (const Sales_data& lhs, const Sales_data& rhs) {
+    return lhs.isbn() == rhs.isbn() &&
+            lhs.sale_price == rhs.sale_price;
+}
+
+inline bool operator != (const Sales_data& lhs, const Sales_data& rhs) {
+    return !(lhs == rhs);
+}
+
+Sales_data& Sales_data::operator += (const Sales_data& rhs) {
+    units_sold += rhs.units_sold;
+    revenue += rhs.revenue;
+    selling_price = revenue / units_sold;
+    discount = selling_price / sale_price;
+    return *this;
+}
+
+Sales_data operator + (const Sales_data& lhs, const Sales_data& rhs) {
+    Sales_data ret(lhs);
+    ret += rhs;
+    return ret;
+}
+
+istream& operator >> (istream& in, Sales_data& s) {
+    in >> s.book_isbn >> s.units_sold >> s.selling_price >> s.sale_price;
+    if (in && s.selling_price != 0) {
+        s.discount = s.selling_price / s.sale_price;
+        s.revenue = s.selling_price * s.units_sold;
+    }
+    else
+    {
+        s = Sales_data();
+    }
+    return in;
+
+} 
+
+ostream& operator << (ostream& out, const Sales_data& s) {
+    out << s.isbn() << " " 
+        << s.units_sold << " " 
+        << s.selling_price << " " 
+        << s.sale_price << " " 
+        << s.discount << " " << endl;
+    return out;
+}
+
+#endif
