@@ -1,0 +1,11 @@
+#ifndef EXAMPLE
+#define EXAMPLE
+class Example {
+    public:
+        static double rate; //声明有这样一个静态变量但不分配空间
+        static const int vec_size = 5; //声明有这样一个静态变量并初始化默认值
+        static vector<double> dvec;
+        static int arr[];
+
+};
+#endif

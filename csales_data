@@ -10,7 +10,9 @@ struct Sales_data
 */
 {
     friend istream& operator >> (istream&, Sales_data&);
+    friend istream& read(istream&, Sales_data&); //必须写友元函数 因为非成员函数只有通过友元函数可以直接访问private数据 且因为是写数据 不能用const
     friend ostream& operator << (ostream&, const Sales_data&);
+    friend ostream& print(ostream&, const Sales_data&); //读数据 用常量引用即可 为了连读 返回类型是ostream引用
     friend bool operator < (const Sales_data&, const Sales_data&);
     friend bool operator == (const Sales_data&, const Sales_data&);
 
@@ -22,6 +24,8 @@ struct Sales_data
     public:
         Sales_data& operator += (const Sales_data&); //不能放在结构体外面: too few params for this operator
         string isbn() const {return book_isbn;}
+        Sales_data& combine(const Sales_data&);
+        double avg_price() { return units_sold? revenue / units_sold : 0; }
     private:
         string book_isbn;
         unsigned units_sold = 0;
@@ -39,6 +43,9 @@ inline bool compare_isbn(const Sales_data& lhs, const Sales_data& rhs) {
 //不能放在结构体里面: too more params for this operator
 Sales_data operator + (const Sales_data&, const Sales_data&); 
 
+Sales_data add(const Sales_data&, const Sales_data&);
+istream& read(istream&, Sales_data&);
+
 inline bool operator == (const Sales_data& lhs, const Sales_data& rhs) {
     return lhs.isbn() == rhs.isbn() &&
             lhs.sale_price == rhs.sale_price;
@@ -46,6 +53,23 @@ inline bool operator == (const Sales_data& lhs, const Sales_data& rhs) {
 
 inline bool operator != (const Sales_data& lhs, const Sales_data& rhs) {
     return !(lhs == rhs);
+}
+
+Sales_data& Sales_data::combine(const Sales_data &rhs) {
+    units_sold += rhs.units_sold;
+    revenue += rhs.revenue;
+    return *this;
+}
+
+Sales_data add(const Sales_data &lhs, const Sales_data &rhs) { //不能返回引用类型因为是局部变量
+    Sales_data sum = lhs;
+    sum.combine(rhs);
+    return sum;
+}
+
+istream& read(istream &in, Sales_data &s ) {
+    in >> s.book_isbn >> s.units_sold >> s.selling_price >> s.sale_price;
+    return in;
 }
 
 Sales_data& Sales_data::operator += (const Sales_data& rhs) {
@@ -84,5 +108,16 @@ ostream& operator << (ostream& out, const Sales_data& s) {
         << s.discount << " " << endl;
     return out;
 }
+
+ostream& print(ostream& out, const Sales_data& s) {
+    out << s.isbn() << " " 
+        << s.units_sold << " " 
+        << s.selling_price << " " 
+        << s.sale_price << " " 
+        << s.discount << " " << endl;
+    return out;
+}
+
+
 
 #endif

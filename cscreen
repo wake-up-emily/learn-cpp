@@ -1,0 +1,50 @@
+#ifndef CSCREEN
+#define CSCREEN
+
+#include <string>
+using namespace std;
+
+struct Screen
+{
+    public:
+        using pos = string::size_type;
+        Screen() = default;
+        Screen(const pos h, const pos w) 
+        : height(h), width(w) ,content(h*w,' '){}
+        Screen(const pos h, const pos w, const char c)
+        : height(h), width(w), content(h*w,c) {}
+
+    public:
+        Screen move(const pos&, const pos&);
+        Screen set(const pos&,const pos&,const char&);
+        Screen set(const char&);
+        //当成员函数的const和non-const版本同时存在，const object只能调用const版本，non-const object只能调用non-const版本
+        Screen& display(ostream& out) { do_display(out); return *this; }
+        const Screen& display(ostream& out) const { do_display(out); return *this; }
+
+    private:
+        void do_display(ostream& out) const { out << content; }
+        pos height=0, width=0;
+        pos cursor = 0;
+        string content;
+
+};
+
+inline Screen Screen::move(const pos &row, const pos &col) {
+    cursor = row * width + col; 
+    return *this;
+}
+
+inline Screen Screen::set(const char &c) {
+    content[cursor] = c;
+    return *this;
+}
+
+inline Screen Screen::set(const pos &row, const pos &col, const char &c) {
+    content[row * width + col] = c;
+    return *this;
+}
+
+
+
+#endif

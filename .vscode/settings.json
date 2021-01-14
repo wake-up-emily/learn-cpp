@@ -4,6 +4,8 @@
         "iosfwd": "cpp",
         "csales_data": "cpp",
         "iomanip": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "cscreen": "cpp",
+        "cexample": "cpp"
     }
 }

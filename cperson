@@ -1,0 +1,25 @@
+#ifndef CPERSON
+#define CPERSON
+#include <iostream> // Include for I/O streams
+using namespace std; // Streams are in the std namespace (standard library)
+#include <string>
+
+struct Person
+
+{
+    friend istream& operator >> (istream& , Person&);
+    public:
+        Person() = default;
+        Person(const string f_name, const string l_name, const string addre)
+        : first_name(f_name),last_name(l_name),_address(addre) {}
+        Person(istream& in) {in >> *this;}
+        string name() const {return first_name + " " + last_name;}
+        string address() const {return _address;}
+    private:
+        string first_name;
+        string last_name;
+        string _address;
+};
+
+
+#endif
