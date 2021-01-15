@@ -1,5 +1,6 @@
 #ifndef EXAMPLE
 #define EXAMPLE
+#include <vector>
 class Example {
     public:
         static double rate; //声明有这样一个静态变量但不分配空间
