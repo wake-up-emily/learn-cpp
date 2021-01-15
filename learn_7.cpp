@@ -25,7 +25,7 @@ using namespace std; // Streams are in the std namespace (standard library)
 
 double Example::rate = 6.5;
 // const int Example::vec_size; //static字面常量值在类声明中初始化默认值后 在类外无需定义也可通过编译
-// vector<double> Example::dvec(Example::vec_size); //编译报错 dvec: incomplete type is not allowed
+vector<double> Example::dvec(Example::vec_size); //编译报错 dvec: incomplete type is not allowed 是因为头文件没有引入<vector>
 int Example::arr[vec_size] = {0,1,2};
 
 
@@ -63,6 +63,7 @@ int main()
     //     cout << elem << " ";
     // }
     // cout << endl;
+    // cout << e.dvec.size() << endl;
 
     
 
