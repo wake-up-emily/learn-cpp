@@ -10,8 +10,7 @@
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [
-                "hello",
-                "world"
+                
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

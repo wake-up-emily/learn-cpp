@@ -6,6 +6,9 @@
         "iomanip": "cpp",
         "vector": "cpp",
         "cscreen": "cpp",
-        "cexample": "cpp"
+        "cexample": "cpp",
+        "deque": "cpp",
+        "forward_list": "cpp",
+        "iostream": "cpp"
     }
 }
