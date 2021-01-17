@@ -246,3 +246,240 @@ c++细节
 			- 成员函数可直接调用
 		- 类内初始化
 			- const/ constexpr
+- 第八章 IO库
+	- IO类
+		- iostream
+		- fstream
+		- sstream 
+			- ifstream和istringstream都继承自itream 也就是cin怎么用这俩就能怎么用
+		- IO对象无拷贝或赋值
+			- 一般传引用 因为读写一个IO对象会改变其状态 传递和返回的引用不能是const
+		- 状态
+			- in.eof()
+			- in.bad()
+			- in.fail()
+			- ... 一般while (in)检测就代表这些重要的flag值没有设为true
+			- 循环中要先重置in.clear() 每一次循环复位in的标志状态
+			- endl 表示换行并刷新缓冲区
+			- cout << unitbuf 表示任何输出都立即刷新 无缓冲 cout << nonunitbuf 表示回到默认的带缓冲输出
+			- 如果程序崩溃 缓冲区不会刷新
+			- 任何读取操作都会先刷新关联的输出流 所以交互式系统一般会关联输入流和输出流 使读取操作前打印出用户的输入
+	- 文件输入输出
+		- 使用
+			- ifstream fstrm(file); 关联到输入文件
+			- ifstream fstrm(file,mode); 关联到输入文件并选择mode in or out
+			- fstrm.open();
+			- fstrm.close(); 当一个fstrm离开作用域时 .close()会自动调用
+			- fstrm.is_open();
+		- 文件模式
+			- out 只可以对ofstream和fstream选择out模式 以out模式打开会丢失已有数据
+			- in  只可以对ifstream和fstream选择in模式
+			- app 以app模式打开不会丢失已有数据
+			- trunc 只有当out也被设定时才可以用trunc模式 默认情况下 out模式下没有指定trunc 也会截断文件
+		- string流
+			- 使用
+				- sstream strm; 未绑定string对象的strm 配合strm.str(s)使用
+				- sstream strm(s); 绑定strm与string
+				- strm.str() 返回strm所保存的str的拷贝 eg. cout << strm.str() << endl;
+				- strm.str(s) 将s拷贝到strm中 返回void
+			- istringstream
+			- ostringstream
+- 第九章 序列式容器
+	- 概述
+		- 所有容器都有不同程度的性能折中
+			- 添加或删除元素的代价
+			- 非顺序访问容器元素的代价
+		- 序列式容器
+			- vector 连续空间 可扩展 快速随机访问元素 在尾部之外的位子插入元素或删除元素可能很慢
+			- deque 双端队列 两端可进出 双向可扩充 在头尾插入/删除元素很快 
+			- list 双向链表 只支持双向顺序访问 在链表任何位置插入/删除元素都很快
+			- forward_list 单向链表 只支持单向顺序访问 在链表任何位置插入/删除元素都很快
+			- array 创建时分配固定大小的连续空间 可快速随机访问 不能添加或删除元素
+			- string 与vector相似 但只存char 连续空间 可扩展 快速随机访问元素 在尾部之外的位子插入元素或删除元素可能很慢
+		— 序列式容器选择
+			- 通常 使用vector是最好的序列式容器选择 除非你有更好的选项
+			- 选择容器的原则
+				- 能不能选vector?
+				- 程序有很多小的元素 且空间的额外开销很重要 不要选list or forward_list
+				- 要求在容器的中间插入/删除元素 选list/forward_list
+				- 要求随机访问元素 选vector or deque
+				- 头尾要求插入/删除 但中间不需要插入/删除 选deque
+				- 输入时要求向中间插入元素 使用时需要随机访问：
+					- 能不能先放进去再排序？
+					- 输入阶段用list 输入完成后存到vector
+				- 其他情况最好看性能测试的结果
+	- 容器库概览
+		- 容器操作层次
+			- 所有容器都提供的操作
+			- 按迭代器分类容器提供的操作
+			- 部分容器独有的操作
+		- 容器操作类型
+			- 类型别名
+				- iterator
+				- const_iterator
+				- size_type 无符号整数类型 足以保存该容器可提供的最大容器大小
+				- difference_type 带符号整数类型 足以保存两个迭代器之间的距离
+				- value_type 元素类型
+				- reference 左值类型 等于 value_type&
+				- const_reference
+			- 构造函数（6种）
+				- C c; 默认构造
+				- C c1(c2); 容器拷贝构造
+				- C c1 = c2; 拷贝赋值
+				- C c{a,b,c...}; 花括号拷贝构造
+				- C c = {a,b,c...}; 花括号拷贝赋值
+				- C c(b,e); 迭代器拷贝构造
+
+				序列式容器+2种：
+				- C seq(n); 包含n个元素，元素值为初始值
+				- C seq(n,t); 包含n个元素，元素值为t
+			- swap
+				- a.swap(b);
+				- swap(a,b); 通常比a.swap(b)快得多
+			- 大小
+				- c.size(); forward_list不支持
+				- c.empty();
+				- c.max_size();
+			- 关系运算符
+				- ==, !=
+				- < <= > >=
+			- 获取迭代器
+				- c.begin(), c.end()
+				- c.cbegin(), c.cend()
+			- 反向容器
+				- c.rbegin(), c.rend()
+				- c.crbegin(), c.crend()
+		- 迭代器
+			- forward_list 不支持 --
+			- 迭代器范围
+				- 左闭右开区间 右指向尾元素之后的位置 [begin, end)
+				- 迭代器范围的形成：
+					- begin end在同一个容器或end指向容器最后一个元素之后的位置
+					- end >= begin
+				- begin = end时 由于左闭右开 也就是范围为空
+				- begin != end时 范围至少包含一个元素 也就是begin
+				- 可以递增begin若干次 使begin = end
+		- 容器类型成员
+			- 使用类型别名
+		- begin和end成员
+			- cbegin() 和 cend()配合 auto使用 eg. auto it = c.cbegin(); 其实auto就是const_iterator类型
+			- 不需要写访问时应使用cbegin()和cend()
+		- 容器定义和初始化
+			- 不同类型的容器不能使用拷贝构造和拷贝赋值 但可以使用迭代器拷贝构造 或者c1.assign.(c2_cb,c2_ce)
+			- array容器
+				- array容器和内置数组的区别
+					- 形式
+						- int arr[] = ... 这是内置数组 不是array容器
+						- array<type,n> 这是array容器 数组类型和大小一起构成了array容器
+					- 拷贝
+						- 内置数组不支持拷贝构造或拷贝赋值
+						- array容器支持
+		- 赋值和swap
+			- 使用assign(仅序列式容器)
+				- 允许从一个不同但相容的类型赋值 或从容器的一个子序列赋值
+			- 使用swap
+				- 很快 元素本身未交换 交换的是两个容器的内部数据结构
+				- 除array外 swap不对任何元素进行拷贝 删除或插入操作 O(1)
+				- 元素在swap过程中没有移动 意味着指向元素的迭代器 引用和指针不会失效
+				- arr.swap()真正交换元素 O(n)
+		- 关系运算符
+			- 两个容器比大小：
+				- 使用元素定义的关系运算符比大小
+	- 序列式容器操作
+		- 添加 除forward_list外
+			- c.push_back(); 元素拷贝 不影响到提供值的原始对象
+			- c.emplace_back(); 构造而非拷贝
+			- c.push_front(); vector和string不支持
+			- c.insert(p,n,t); 
+				- 在迭代器p指向的元素之前插入n个值为t的元素 返回新添加的第一个元素的迭代器 
+				- 当p指向c.begin()并开始循环调用时相当于push_front() 
+				- 向一个vector string或deque插入元素会使所有指向容器的迭代器 引用和指针失效
+			- c.insert(p,il); il = {a,b,c...}
+			- c.insert(p,cb,ce);
+		- 访问 仅vector deque string array
+			- c.front() 返回容器首元素的引用
+			- c.back() 返回容器尾元素的引用
+			- c[n] 返回容器下标为n的元素的引用 保证下标不越界是程序员的责任 不是编译器
+			- c.at() 同上 下标越界时抛出out_of_range异常
+		- 删除 
+			- c.pop_back() 删除容器尾元素 若容器为空 返回void
+			- c.erase(p) 
+				- 删除迭代器p所指定的元素 返回被删元素其后一个元素的迭代器
+				- 若p指向尾元素 则返回尾后元素迭代器 也就是c.end()
+				- 若p指向尾后迭代器 函数行为未定义
+			- c.erase(b,e)
+				- 删除be指定范围内的元素 返回e后一个元素的迭代器
+				- 若e指向c.end() 则还是返回c.end()
+			- c.clear() 删除容器中所有元素 并返回void
+			- 删除deque首尾之外的元素 vector和string尾元素之外的元素 都会使迭代器 引用和指针失效 因此返回迭代器可以保证迭代器始终在更新
+			- 删除元素前 必须确保这些元素是存在的
+		- forward_list
+			- 删除某个中间元素需要把前一个元素的指针的下一个元素指向被删元素的下一个元素 但单向链表不能知道前一个元素 所以只能insert_after
+			- insert_after的返回迭代器是指向最后一个插入元素的迭代器
+			- erase_after的返回迭代器是被删元素之后的迭代器
+			- lst.before_begin();
+			- lst.cbefore_begin();
+			- lst.insert_after(p,t); 
+			- lst.insert_after(p,n,t);
+			- lst.insert_after(p,b,e);
+			- lst.insert_after(p,il); il = {a,b,c...}
+			- lst.emplace_after(p,args);
+			- lst.erase_after(p);
+			- lst.erase_after(b,e);
+		- 改变容器大小
+			- c.resize(n) n > c.size()时 添加(n-c.size())个初始值到c末尾 否则丢弃末尾元素使 c.size() = n
+			- c.resize(n,t) 上述情况的初始值为t
+		- 容器操作可能使迭代器失效
+			- 不要保存end返回的迭代器
+				- 在循环中删除或添加元素导致迭代器失效后 用end判定循环的代码行为是未定义的 会引发无限循环
+				- 保证每次判断时都使用更新的end迭代器
+	- vector对象是如何增长的
+		- 部分接口显示出分配空间
+			- c.shrink_to_fit()
+				- 要求deque vector string退回不需要的内存空间
+				- 只是代表我们表示不再需要更多的内存空间
+				- 不代表一定会退回内存空间
+				- 将capacity()减少为size()大小
+				- c.resize(c.size())? no resize只改变容器中元素的数量 不改变容器的capacity
+			- c.capacity() 不重新分配内存时可以存放多少个元素
+			- c.reserve(n) 
+				- 分配至少能存n个元素的内存空间
+				- 只有当需求超过当前capacity时才会重新分配内存 分配的内存至少满足需求 可能更大
+				- 永远不会减少容器占用的内存空间
+	- 额外的string操作
+		- 构造string的其他方法
+			- string s(cp,n)
+			- string s(s2,pos2)
+			- string s(s2,pos2,len2)
+		- substr
+			- s.substr(pos,n)
+			- s.substr(pos) b > e raise out_of_range_error
+		- 改变string的其他方法
+			- 查表型 需要时回来翻看即可
+			- replace
+			- append
+			- insert
+			- find
+			- rfind
+			- find_first_of
+			- find_last_of
+			- find_lirst_not_of
+			- find_last_not_of
+			- compare
+			- to_string()
+			- stoi(s,p,b)
+			- stof(s,p)
+			- stod(s,p)
+			- sto...
+	- 容器适配器
+		- 序列式容器适配器
+			- stack
+			- queue
+			- priority_queue
+		- 定义适配器
+			- 默认构造
+			- 拷贝构造
+			- 所有适配器都需要容器有添加 删除 访问尾元素的能力 所以array forward_list容器类型完全不可以作为第二参数来重载默认容器
+				- stack 要求back 所以其他序列式容器都可重载 默认是deque
+				- queue 还要push front 所以 list和deque可 vector不可
+				- priority_queue 不要push front 但要随机访问 所以 vector和deque可 list不可
