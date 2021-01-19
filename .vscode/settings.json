@@ -9,6 +9,8 @@
         "cexample": "cpp",
         "deque": "cpp",
         "forward_list": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "iterator": "cpp",
+        "numeric": "cpp"
     }
 }
