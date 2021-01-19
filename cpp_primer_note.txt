@@ -483,3 +483,99 @@ c++细节
 				- stack 要求back 所以其他序列式容器都可重载 默认是deque
 				- queue 还要push front 所以 list和deque可 vector不可
 				- priority_queue 不要push front 但要随机访问 所以 vector和deque可 list不可
+- 第十章 泛型算法
+	- 概述
+		- 算法一般通过迭代器范围操作容器 迭代器令算法不依赖于容器 但算法依赖于元素类型的操作
+		- 算法不改变底层容器的大小 它可能改变元素的值 也可能在容器内移动元素 但不会添加或删除元素
+	- 初识
+		- 只读
+			- 仅接受单一迭代器来表示第二个序列的算法 都假定第二个序列至少和第一个一样长
+		- 写
+			- 容器大小要满足算法能写入需要写入的元素 大小指元素个数而不是可用空间
+			- 算法不检查写操作
+			- 由于以上两点 引入 插入迭代器 insert_iterator 插入赋值号右值元素到容器中
+		- 重排
+	- 定制操作
+		- 向算法传递函数 
+			- predicate 谓词
+				- 一元谓词
+				- 二元谓词
+			- lambda函数
+				- [capture list](parameter list) -> return type {function body}
+				- capture list lambda函数定义的局部变量列表 通常为空
+				- 捕获
+					- 值捕获
+						- 捕获的值在lambda创建时拷贝得到 在正式调用lambda前 原值的更改不会影响到lambda拿到的拷贝值
+						- 非指针类型可以直接 值捕获
+					- 引用捕获
+						- 比如 ostream& 无法拷贝值 只能引用
+						- 原则
+							- 首先要确保lambda创建时对象是存在的
+							- 从创建到调用lambda函数期间 对象的值可能做出过改变 是否仍是期望值
+							- 可能的话 尽量减少引用捕获
+					- 隐式捕获
+						- 值捕获 [=]
+						- 引用捕获 [&]
+						- 混用
+							- [=,...]
+							- [&,...]
+					- 可变lambda
+						- mutable 如果一个lambda是值拷贝返回一个++int 那使用mutable可以在重复调用lambda时更新返回的int值 否则重复调用也只能无限++一次 由于是值拷贝 原值无论如何不受影响
+						- 引用捕获也可以做到上述效果 原值也会改变
+			- 参数绑定
+				- bind
+					- 占位符
+					- 绑定引用参数 ref(param) cref(param)	
+	- 再探迭代器
+		- 插入迭代器
+		- 流迭代器
+		- 反向迭代器
+		- 移动迭代器
+	- 泛型算法结构
+		- 5类迭代器
+			- 输入迭代器 只读不写 单遍扫描 只能递增 
+				- == ！=
+				- ++
+				- * 解引用只出现在等号右边 *iter++ 总是有效的
+				- ->
+			- 输出迭代器 只写不读 单遍扫描 只能递增 
+				- ++
+				- * 解引用只出现在等号左边
+			- 前向迭代器 可读写 多遍扫描 只能递增
+			- 双向迭代器 可读写 多遍扫描 可递增递减
+				- --
+			- 随机访问迭代器 可读写 多遍扫描 支持全部迭代器运算
+				- < <= > >=
+				- + += - -=
+				- -
+				- []
+		- 算法形参模式
+			- alg(beg,end,...)
+			- alg(beg,end,dest,...) 要求dest迭代器的算法都默认无论写入多少数据目标空间都可容纳 一般是插入迭代器或ostream_ieterator
+			- alg(beg,end,beg2,...)
+			- alg(beg,end,beg2,end2,...)
+		- 算法命名规范
+			- 一些算法通过重载形式传递一个谓词
+				- unique(beg,end)
+				- unique(beg,end,comp)
+			- _if版本
+				- find(beg,end,val)
+				- find(beg,end,pred)
+			- _copy版本
+	- 特定容器算法
+		- 链表类型 
+			- 修改指针而非元素缩短时间
+				- lst.merge(lst2)
+				- lst.merge(lst2,comp)
+				- lst.remove(val)
+				- lst.remove_if(pred)
+				- lst.reverse()
+				- lst.sort()
+				- lst.sort(comp)
+				- lst.unique()
+				- lst.unique(pred)
+			- splice成员 剪切lst2元素到lst p后位置
+				- lst.splice(args) or flst.splice_after(args)
+					- (p,lst2)
+					- (p,lst2,p2)
+					- (p,lst2,b,e)
