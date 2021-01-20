@@ -11,6 +11,9 @@
         "forward_list": "cpp",
         "iostream": "cpp",
         "iterator": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "string": "cpp",
+        "set": "cpp",
+        "algorithm": "cpp"
     }
 }
