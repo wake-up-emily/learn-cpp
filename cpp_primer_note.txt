@@ -579,3 +579,110 @@ c++细节
 					- (p,lst2)
 					- (p,lst2,p2)
 					- (p,lst2,b,e)
+- 第十一章 关联容器
+	- 类型
+		- 按关键字有序保存元素 使用比较运算符来组织元素
+			- map 	键值对
+			- set 	关键字
+			- multimap	关键字可重复的map
+			- multiset	关键字可重复的set
+		- 无序集合 hash实现
+			- unordered_map
+			- unordered_set
+			- unordered_multimap
+			- unordered_multiset
+	- 使用关联容器
+		- map
+			- 关联数组map就是下标不必是整数的数组
+			- item.first item.second
+		- set
+			- item_set[key] = value
+	- 概述
+		- 定义关联式容器
+			- 不支持push_back() push_front() 使用insert()
+			- 关联式容器都是双向迭代器类型
+		- 关键字类型的要求
+			- 元素类型必须定义元素比较的方法 毕竟是对key先排序再放入 排序标准就是使用元素定义方法 这点和算法是一样的
+			- 如果元素未提供 和算法一样 支持输入一个谓词来比大小
+			- 谓词比大小遵循  严格弱序
+				- if k1 <= k2 && k2 <= k1 {k1 = k2}
+				- if k1 <= k2 && k2 <= k3 {k1 <= k3}
+			- multiset<key,comp>
+				- multiset<my_class_type,decltype(my_comp)*>
+		- pair类型
+			- 头文件utility
+			- 默认构造函数会对其成员默认值初始化
+			- 也可以使用拷贝构造给值
+			- 返回值为pair的函数可以在条件语句中返回默认构造或者{}拷贝构造
+			
+			- 操作
+				- pair<T1,T2> p;
+				- pair<T1,T2> P(v1,v2);
+				- pair<T1,T2> p = {v1,v2};
+				- .first .second
+				- make_pair(v1,v2);
+				- == !=
+				- < <= > >= 字典序
+	- 操作
+		- 类型别名 map<T1,T2>
+			- key_type 		T1				set类型的key_type和value_type是一样的
+			- mapped_type 	T2 				只有map类型有
+			- value_type	pair<T1,T2>		解引用一个关联式容器迭代器时 得到一个value_type的值引用
+		- 关联式容器迭代器
+			- key_value是const的
+			- map_it -> first, map_it -> second
+			- 通常不对关联式容器使用泛型算法 因为key_value const特性很难用来算法遍历，改值和重排
+			- 但关联式容器特化了一些算法 比泛型算法更快 更适合这个容器
+		- 添加元素
+			- 操作
+				- c.insert(v);
+				- c.emplace(args);
+				- c.insert(b,e);
+				- c.insert({});
+				- c.insert(p,v);
+				- c.emplace(p,args);
+			- 返回值
+				- pair<p,bool> first 指向value_type second 元素插入成功or已存在
+		- 删除元素
+			- c.erase(k); 	返回size_type 指出删除的元素数量
+			- c.erase(p);	返回p之后元素的迭代器 未找到返回c.end()
+			- c.erase(b,e);	返回e
+		- map下标
+			- 与vector不同 找不到map[key]时会添加key到map 序列式容器下标不越界是程序员的责任
+			- 操作
+				- c[k]		适用于非const的map和unordered_map
+				- c.at(k)
+		- 访问元素
+			- c.find(k);			检查元素是否在map容器中可以用find()代替下标操作
+			- c.count(k);			multimap/multiset中查找遍历所有key的mapped_value可以使用 count() + find()
+			- c.lower_bound(k);		不适用于无序容器 multimap/multiset中查找遍历所有key的mapped_value也可以使用该迭代器
+			- c.upper_bound(k);		如果lower_bound()和upper_bound()返回相同的迭代器 即 c.end() 那给定关键字不在容器中
+			- c.equal_range(k);		最直接的方法 返回一个pair<first_match_it,last_match_it>
+	- 无序容器
+		- 概要
+			- 哈希函数实现
+			- 在某些场景下 维护元素序代价高昂 无序容器是有必要的
+			- 理论上哈希实现可以获得更好的平均性能 但需要性能测试和调优
+		- 操作
+			- 桶管理
+				- 桶接口
+					- c.bucket_count()		正在使用的桶的数目
+					- c.max_bucket_count()
+					- c.bucket_size(n)		第n个桶中有多少元素
+					- c.bucket(k)			关键字为k的元素在哪个桶中
+				- 桶迭代
+					- local_iterator
+					- const_local_iterator
+					- c.begin(n) c.end(n)	桶n的首尾元素迭代器 返回local_iterator
+					- c.cbegin(n) c.cend(n) 返回const_local_iterator
+				- 哈希策略
+					- c.local_factor()		每个桶的平均元素数量 返回float
+					- c.max_load_factor()	local_factor <= max_local_factor
+											bucket_count >=n
+											bucket_count > size/max_load_factor
+					- c.rehash(n)
+					- c.reserve(n)	
+		- 对关键字的要求
+			- 自定义类型的关键字需要自己提供哈希重载作为参数传到哈希模板
+				- ==
+				- hasher函数重载
