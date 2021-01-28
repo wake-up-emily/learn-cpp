@@ -17,7 +17,7 @@ struct Sales_data
     friend bool operator == (const Sales_data&, const Sales_data&);
 
     public:
-        Sales_data() = default;
+        Sales_data();
         Sales_data(const string& book) 
         : book_isbn(book) {}
         Sales_data(istream& is) { is >> *this; }
