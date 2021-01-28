@@ -38,6 +38,27 @@
 			],
 			"group": "build",
 			"detail": "compiler: /usr/bin/g++"
-		}
+		},
+		{
+			"type": "cppbuild",
+			"label": "cppdebug",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-std=c++17",
+                "-stdlib=libc++",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/bin/g++"
+		},
 	]
 }
