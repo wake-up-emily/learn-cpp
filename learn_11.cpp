@@ -8,7 +8,7 @@ using namespace std;
 // using namespace std::placeholders;
 #include <numeric>
 #include <iterator>
-#include "csales_data"
+// #include "csales_data"
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -112,16 +112,16 @@ void count_word_2(string file) {
 
 //11.7
 void add_child(map<string,vector<string>>& family,const string& family_name, const string& child_name) {
-    if ( family.cbegin() != family.cend()) {
-        family[family_name];
-    }
+    // if ( family.cbegin() == family.cend()) {
+    //     family[family_name];
+    // }
     family[family_name].push_back(child_name);
 }
 
 void add_child(map<string,vector<string>>& family,const string& family_name, const vector<string>& childs_name) {
-    if ( family.cbegin() != family.cend()) {
-        family[family_name];
-    }
+    // if ( family.cbegin() == family.cend()) {
+    //     family[family_name];
+    // }
     for (auto child_name : childs_name) {
         family[family_name].push_back(child_name);
     }
@@ -140,7 +140,7 @@ void show_family(const map<string,vector<string>>& family) {
 //11.8
 void save_unique_word(vector<string>& words,const string& word) {
     auto first_qualified = find(words.cbegin(),words.cend(),word);
-    if ( first_qualified != words.cend()) {
+    if ( first_qualified == words.cend()) {
         words.push_back(word);
     }
 }
@@ -199,9 +199,9 @@ void show_word(const map<string,int>& words) {
 }
 
 //11.11
-bool my_compare_isbn(const Sales_data& book1, const Sales_data& book2) {
-    return book1.isbn() < book2.isbn();
-}
+// bool my_compare_isbn(const Sales_data& book1, const Sales_data& book2) {
+//     return book1.isbn() < book2.isbn();
+// }
 
 //11.12
 vector<pair<string,int>> my_bind(const vector<string>& svec, const vector<int>& ivec) {
