@@ -686,3 +686,268 @@ c++细节
 			- 自定义类型的关键字需要自己提供哈希重载作为参数传到哈希模板
 				- ==
 				- hasher函数重载
+- 第十二章 动态内存
+	- 动态内存与智能指针
+		- 介绍
+			- new 在动态内存空间堆中为对象分配一个空间并返回一个指向该对象的指针
+			- delete 接受一个动态对象的指针 销毁该对象 并释放与之关联的内存 忘记释放内存会导致内存泄漏
+			- 标准库提供管理动态内存的智能指针 头文件 memory
+		- 操作
+			- shared_ptr与unique_ptr共有操作
+				- shared_ptr<string> sp;
+				- unique_ptr<string> up;
+				- p 						if p 当p指向一个对象时为true if p->empty() 若p1指向类型的对象值为空
+				- *p 						解引用p 获得它指向的对象
+				- p -> mem 					等价于 (*p).mem
+				- p.get()					返回p中所保存的指针 若p已释放其对象 则返回的指针指向的对象已经消失
+				- swap(p,q)					交换指针 
+				- p.swap(q)					其实.reset()就是调用了p.swap(q) 交换指针
+			- shared_ptr
+				- make_shared<T>(args) 		返回一个shared_ptr 指向一个动态分配的T类型的对象 用args初始化对象
+				- shared_ptr<T> p(q)		p是shared_ptr指针q的拷贝 会递增q的计数器
+				- p = q 					p和q都是shared_ptr 递减p的计数器并递增q的计数器 若p的引用计数变为0 则将其管理的原内存释放
+				- p.unique() 				若p.unique()=1 返回true 否则false
+				- p.use_count() 			返回与p共享对象的智能指针数量 可能很慢 主要用于调试
+		- shared_ptr
+			- 构造
+				- make_shared函数 是最安全的分配和使用动态内存的方法 类似序列式容器的emplace成员 安全构造 一般可以用auto保存其指针类型
+				- 来自互联网：
+					make_shared安全在于：
+						防止使用相同的内置指针值初始化（或reset）多个智能指针 及其导致的同一个对象被多次销毁的潜在问题 
+						new一个对象并赋给shared_ptr 是分两步 
+						先分配对象内存 
+						再分配一个控制块内存 
+						同一个动态对象被多个shared_ptr持有 
+						意味着一个动态对象 多个控制块内存 
+						其引用计数是分开的
+						会使shared_ptr原本的设计目的失效
+						而且离开作用域时
+						同一个对象被销毁两次会出事
+						but make_shared在分配对象内存时就同时在临近的内存分配了一个控制块
+						所有后来的shared_ptr拷贝或赋值都记录在这个控制块之下
+						可以起到shared_ptr统计对象持有数的作用
+					make_shared劣势：
+						还是控制块的问题
+						weak_ptr的设计是
+						当最后一个弱引用离开的时候 共享的内部信息控制块才会被销毁和释放
+						这意味着
+						使用make_shared构造的动态对象
+						生命周期并不是shared_ptr决定的
+						最后一个weak_ptr销毁时 动态对象才会被销毁
+						无形中延长了其生命周期
+				- 来自自己：
+					注意make_shared是用于构造 构造 构造
+
+					由于shared_ptr支持拷贝构造和拷贝赋值
+					make_shared作为右值可以帮助构造shared_ptr
+
+					作为右值就意味着
+					如果make_shared封装在一个函数里
+					它必须有返回值
+
+					如果没有返回值的话
+					由于make_shared对象和shared_ptr已经绑定
+					一荣俱荣 一损俱损
+					离开作用域时 不管局部作用域拷贝了多少个shared_ptr都会自动销毁
+					make_shared动态对象也就销毁了
+
+					也因为make_shared仅用于构造shared_ptr
+					因此一个已经存在的智能指针
+					哪怕是一个已经存在的空智能指针
+					只能通过p1.reset(p2) 即 p1.swap(p2)的方式交换指针 重设动态对象的控制权
+
+			- 拷贝构造和拷贝赋值
+				- 共享一份在动态内存空间上的数据 每个shared_ptr都有一个关联的计数器 引用计数 reference_count
+			- 自动释放对象和内存
+				- reference_count = 0 时会自动调用析构函数释放其管理的对象
+				- 确保无用的shared_ptr手动销毁 如果将指针保存在容器中并进行了重排 确保重排后erase掉不需要的元素 否则内存泄漏
+			- 使用动态内存的三种原因：
+				- 程序不知道自己需要使用多少对象	容器
+				- 程序不知道所需对象的准确类型	十五章举例
+				- 程序需要在多个对象间共享数据	本章举例
+		- 直接管理内存
+			- new
+				- auto 
+					- 智能指针的类型 如果new的对象初始化时使用单个初始化器 可以用auto推测类型
+					- auto p1 = new auto(obj) 	可
+					- auto p2 = new auto{a,bc} 	不可
+				- const
+				- nothrow
+					- bad_alloc
+						- 内存不够时无法new一个空间 抛出异常bad_alloc
+					- 不想抛出异常时用 new (nothrow) obj 定位new 返回一个空指针
+			- delete
+				- 必须传一个指向动态对象的指针或一个空指针
+				- 销毁给定指针指向的对象 并 释放对应的内存
+				- 释放一块非new分配的内存 或者相同的指针释放多次 其行为是未定义的
+				- 动态对象的生存期直到它被销毁为止 使用非智能指针处理动态对象时需要手动管理对象的生存期 显示释放前一直会存在
+					- 也就是说 在函数体中使用到的指针 都要看看它指向的对象是否是动态对象 然后决定是在函数体处理掉 还是交给程序调用者决定
+			- 使用new delete管理动态内存存在3个问题：
+				- 忘记delete 内存 导致内存泄漏
+				- 使用已经释放掉的对象 有时可以检测出这种错误
+				- 同一块内存释放两次
+				- 以上 希望大家坚持使用智能指针
+			- dangling pointer 空悬指针
+				- 指针所指对象已销毁 但指针依然指向其地址
+				- 未初始化指针的所有缺点 空悬指针都有
+				- 离开作用域前 释放掉指针关联的内存 delete之后 将nullptr赋予指针 清楚地指出该指针不再指向任何对象 然后指针离开作用域
+				- 但这不解决多个指针指向同一个对象的问题
+		- shared_ptr和new结合使用
+			- 智能指针的构造函数是explicit的 不能通过拷贝赋值的方式构造 只能拷贝构造创建
+				- shared_ptr<int> p1 = new int(1024) 	不可
+				- shared_ptr<int> p1(new int(1024))		可
+			- 函数体的return和返回值都显示要求智能指针型
+			- 其他操作
+				- shared_ptr<T> p(q);					p管理内置指针q所指向的对象
+				- shared_ptr<T> p(u); 					从unique_ptr接管对象的所有权
+				- shared_ptr<T> p(q,d); 				传入自定义的delete操作
+				- shared_ptr<T> p(p2,d);				p是p2的拷贝 区别是p使用自定义的delete操作
+				- p.reset();							若p是唯一指向该动态对象的智能指针 释放对象 将p置为空
+				- p.reset(q);							令p指向q或空 经常和unique一起使用 判断是否是唯一用户 不是的话先拷贝数据再改值
+				- p.reset(q,d);							释放q时调用d
+			- 不要混合使用智能指针和普通指针
+				- 使用普通指针访问智能指针负责的对象很危险 因为你不知道对象何时会被销毁
+			- 永远不要用p.get()初始化另一个智能指针或为智能指针赋值
+				- p.get()返回一个内置指针 设计场景是 向不能使用智能指针的代码传递一个内置指针 但这段代码不能delete内置指针
+		- 智能指针和异常
+			- 如果是普通指针 在new和delete之间出现未捕获的异常 会引起内存泄漏
+			- 分配内存 但没有写析构函数来销毁内存的自定义类 使用智能指针可以有效解决以上问题
+			- deleter删除器
+			- 智能指针基本规范
+				- 不使用相同的内置指针值初始化（或reset）多个智能指针 （注：原因见上文shared_ptr构造-来自互联网）
+				- 不delete get()返回的普通指针 （注：避免发生第三条也就是第一条的惨案以及第四条）
+				- 不使用get()初始化或reset另一个智能指针 （注：这和第一条使用相同的内置指针初始化多个智能指针是一样的风险）
+				- 如果你使用get()返回的普通指针 记住当最后一个智能指针销毁后 该指针也无效了 （注：这违背了智能指针的设计目的）
+				- 如果智能指针管理的资源不是new分配的内存 记住传一个删除器
+		- unique_ptr
+			- 初始化必须采用直接初始化形式 绑定到一个new返回的指针上
+			- 不支持拷贝构造和拷贝赋值
+			- 支持转移所有权
+				- unique_ptr<string> p2(p1.release());	转移p1所有权到p2 p1置空
+				- p2.reset(p3.release());				释放p2原动态对象 转移p3所有权到p2 p3置空
+				- 这两个用法是推荐的使用.release()的方法 否则要么丢了指针，要么指针传给普通指针 还需要手动delete *p
+			- 操作
+				- unique_ptr<T> u1;						空unique_ptr 使用delete释放指针
+				- unique_ptr<T,D> u2;					使用可调用对象D释放指针
+				- unique_ptr<T,D> u(d);					用类型为D的对象d代替delete
+				- u = nullptr;							释放u指向的对象 并将u置为空
+				- u.release();							u放弃对指针的控制权 返回指针 并将u置为空
+				- u.reset();							释放u指向的对象
+				- u.reset(q);							令u指向q或空
+				- u.reset(nullptr);						等价于u = nullptr;
+		- weak_ptr
+			- 不控制所指对象的生命周期的智能指针 指向一个shared_ptr指向的动态对象
+			- 将一个weak_ptr绑定到shared_ptr上不会增加shared_ptr的引用计数
+			- 最后一个指向对象的shared_ptr被销毁 对象就会被释放 即使有weak_ptr指向对象
+			- 来自互联网：当最后一个弱引用离开的时候, 共享的内部信息控制块会被销毁和释放(共享的对象也会被释放, 如果还没有释放的话)
+				which means make_shared
+			- 操作
+				- weak_ptr<T> w;						空weak_ptr
+				- weak_ptr<T> w(sp);					指向shared_ptr指向的对象
+				- w = p;								p可以是shared_ptr或weak_ptr w与p共享对象
+				- w.reset();							将w置空
+				- w.use_count();						与w共享的shared_ptr的数量
+				- w.expired();							若w.use_count()为0 返回true 否则false
+				- w.lock();								如果expired返回true 返回一个空shared_ptr 否则返回对象的shared_ptr
+			- 用途
+				- if条件判断w.lock()存在后在if作用域内安全共享对象
+				- 不影响对象的生命周期 但可以安全访问对象
+	- 动态数组
+		- new和数组
+			- 动态分配一个空数组是合法的
+			- unique_ptr操作
+				- unique_ptr<int[]> up(new int[10]);	
+				- up.release() 							会自动调用delete []
+				- up[i]									当一个up指向数组时 不能使用.和->运算符 但可以使用[]访问数组中的每个元素
+				- delete[] p 							释放动态数组 p指向的还是动态数组的首元素
+			- shared_ptr不直接支持管理动态数组 需自定义deleter 可以用lambda函数
+				- shared_ptr<int> sp(new int[10],[](int* p)->{return delete[] p;});
+				- sp.reset();
+		- allocator类
+			- 头文件memory
+			- 将内存分配和对象构造分开来
+			- 操作
+				- allocator<T> a;						定义一个名为a的allocator对象 可以用于分配内存
+				- a.allocate(n);						使用allocator对象a 分配原始的 未构造的n个类型为T的对象的空间 返回p指针
+				- a.deallocate(p,n);					p必须是一个先前allocate返回的指针 n必须是创建时要求的大小
+				- a.construct(p,args);					p指向的原始内存 args传递给类型为T的构造函数来构造对象
+				- a.destroy(p);							对p指向的对象执行析构函数
+			- 伴随算法
+				- uninitilized_copy(b,e,b2);			从一个迭代器范围拷贝到原始内存 返回q指针 最后构造的元素之后的位置
+				- uninitilized_copy(b,n,b2);			从迭代器首元素开始 拷贝n个元素到原始内存
+				- uninitilized_fill(b,e,t);				在原始内存迭代器范围内创建对象 值为t的拷贝
+				- uninitilized_fill(b,n,t);				在原始内存迭代器首元素起 创建n个 值为t的拷贝
+	- 使用标准库：文本查询程序
+		- 设计
+			- 列出程序的操作帮助我们确定合适的数据结构
+				- 容器选择
+				- 类 功能 数据共享
+				- 设计一个类时 真正实现成员之前先编写如何使用这个类
+			- 来自自己：
+				- 针对这个需求 为什么不能使用一个类解决问题？为什么需要两个类？
+					- 接口固定
+						由于使用者的代码要求print(cout,ts.query(s))这样的使用接口已经固定了 只能这么写
+						那就需要ts.query(s)返回一个类 
+						因为函数接收两个及以上返回值比较麻烦 额外的返回值需要传引用 比较曲折 传一个类会很清晰方便
+						但会需要考虑多个类共享数据的问题
+
+						换句话说 接口变了 比如 tq.query(s) tq.query_file(file)这样的接口
+						那就不需要用到两个类 一个类可以搞定 也无需考虑多个类共享数据的问题
+						见text_query_simple.h
+
+						而事实上 接口固定再实现的情况比较多 大概
+						所以必须习惯起来
+				- 为什么需要先封装str_blob类和str_blob_ptr类？
+					- 其实不用 这里主要是为了教学 学习目标可以说是 
+						- 学会分离式编译
+							- ld: symbol(s) not found for architecture x86_64 一般是头文件引入错误
+								实测分离式编译.cpp文件都引.cpp不容易出错 否则根据提示检查
+							- .h头文件中 接口声明的返回类型是没有出现过的指针类 需要先前置声明 不需要引入指针类的头文件
+							- .h头文件中 需要用到其他类的具体对象 而非指针或引用时 比如用于构造函数传参 取其数据来构造时 需要引入头文件
+						- 学会写一个带指针的类
+						- 学会写一个简易迭代器（还是一个带指针的类）
+							- 构造函数
+								- 传参可以有const版本和非const版本
+								- 看具体使用情况可以增加构造函数
+								- 拷贝赋值 拷贝构造 析构函数 big three
+							- 接口函数
+								- 需要使用到其他类的具体操作时 应该在其他类的.cpp文件 也就是其他类的定义之后实现接口定义
+								- 局部变量的返回值不能是引用
+								- 需要修改原值时返回值必须是引用 尤其是拷贝赋值
+								- 函数名最好能看得出函数是否改变类的数据 如果不改变一定要加const 共享数据 连续调用时发现某一环不是const再去改就还挺麻烦
+									- 常见错误
+										the object has type qualifiers that are not compatible with the member function "Str_blob::at" -- object type is: const Text_query_blob::str_blob
+							- private区的数据可以是一个函数的返回对象
+							- 学会写操作符重载的替代函数
+								- ++ * 是成员函数
+								- 比大小 == != 是友元函数
+									- == 两个迭代器相等的条件：
+										- 要么都是空智能指针 都不指向任何对象
+										- 要么指向同一个对象的同一个位置
+						- 学会使用shared_ptr共享数据
+							- 智能指针的构造函数是explicit的 只能拷贝构造不能拷贝赋值
+								- shared_ptr和new结合使用
+									- 只能拷贝构造
+								- make_shared构造函数
+									- 只能构造
+						- 学会使用weak_ptr检查对象是否存在
+							- .lock()返回shared_ptr再判断
+						- 学会使用std::size_t类型 
+							size_t是标准库定义的类型 
+							在不同的机器上自动调节大小 unsigned long || unsigned long long etc.
+						- 学会使用static
+						- 学会使用标准库提供的算法
+						解法见text_query_blob.h
+
+
+						这里str_blob类相当于vector<string>的适配器
+						封装了vector<string>并开放了一些vector<string>的方法
+						其中一些方法需要用到迭代器
+						因此需要再写一个str_blob_ptr类提供迭代器操作
+						我猜后续章节应该可以有不同层面的解法
+
+						在text_query类使用自定义封装类和使用stl容器类没有不同
+						抛开以上学习目标
+						用using也能起到封装效果
+						顺便把shared_ptr也封装进去都很方便
+						见text_query_b.h
