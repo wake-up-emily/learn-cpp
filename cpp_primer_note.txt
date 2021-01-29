@@ -185,40 +185,170 @@ c++细节
 				- (*p) 解引用得到引用类型 引用类型必须初始化
 					- decltype(*p) c; //不可
 - 第三章 字符串 向量 和数组
-	- string
-		- getline(cin,line)
-		- .empty()
-		- .size() 类型是size_type std中可以记录任意长度的string的无符号类型
-		- + 
-			- 运算符要求等式右边至少有一个是string类型 string s = "hello" + "world"是不行的
-			- 连续 + 是从左往右 string p2 = (p1 + "hello ") + "world" 也符合上一条规范 string p2 = "hello " + "world " + s 就不行
-		- string和char是两种类型 char使用 '' string使用""
-		- cctype头文件中的一堆bool函数 eg. .isspace(c), .isgragh(c)不是空格但可以打印 .isxdigit(c)是16进制数字
-		- for
-		- [] 无符号
-	- vector
-		- {} 列表 vector<string> s{10} 有10个元素 初始值都是结尾为\0的空字符串
-		- .push_back()
-		- [] 无符号
-		- iterator 
-			- v.begin(), v.end()
-			- ->
-			- begin + (end - begin)/2 or (begin + end)/2
-	- array
-		- init
-			- int (*p)[10] = &arr
-			- int (&r)[10] = arr
-		- [] 有符号
-		- iterator
-			- begin(ia), end(ia)
-		- 多维数组
+	- 命名空间 using声明
+		- using namespace::name;
+		- 每个名字都需要独立的using声明
+		- 头文件不应包含using声明
+	- 标准库类型 string
+		- 定义和初始化string对象
+			- 操作
+				- string s;
+				- string s2(s1);
+				- string s2 = s1;
+				- string s("value");
+				- string s = "value";
+				- string s(n,'char');			连续n个字符c组成的字符串
+				- string s = (n,'char'); 		其实是先生成tmp临时变量 再赋值给s
+		- string对象上的操作
+			- 操作
+				- os << s;						写	
+				- is >> s;						读	读未知数量的string对象 通常while循环
+				- getline(is,s);				读一整行 通常while循环
+				- s.empty();					bool
+				- s.size();						string::size_type 一个无符号值 
+					- 不要混用size_type和int 强转类型时负数int会转成一个很大的正数 因此无符号数总是小于一个负数
+					- size_type和size_t的区别
+						- size_t is defined as the type used for the size of an object and is platform dependent.
+						- container::size_type is the type that is used for the number of elements in the container and is container dependent.
+						- All std containers use size_t as the size_type, but each independent library vendor chooses a type that it finds appropriate for its container.
+						- If you look at qt, you'll find that the size_type of Qt containers is version dependent. In Qt3 it was unsigned int and in Qt4 it was changed to int.
+				- s[n];							
+					- 返回s字符串第n个位置的引用 位置从0开始计数
+					- string::size_type n 实际使用时需要检查n是否<s.size()
+				- s1 + s2;
+						string p2 = "hello " + "world " + s 就不行						
+				- s1 = s2;
+				- s1 == s2;						长度相同 包含字符也相同
+				- s1 != s2;
+				- < <= > >= 					字典序 大小写敏感
+		- 处理string对象中的字符
+			- 操作
+				- isalnum(c);					char是 	字母或数字	为真
+				- isslpha(c);					char是 	字母 		为真
+				- isdigit(c);					char是 	数字	 		为真
+				- isxdigit(c);					char是	16进制数字	为真
+				- ispunct(c);					char是 	标点			为真
+				- isspace(c);					char是	空白			为真
+				- isprint(c);					char是 	可打印字符 	为真
+				- isgragh(c);					不是空格但可以打印		为真
+				- islower(c);
+				- isupper(c);
+				- tolower(c);
+				- toupper(c);
+			- 处理每个字符 使用for循环
+				- for (declaration : expression)
+					statement
+					- 逻辑运算符 &&
+			- 处理部分字符
+				- []
+	- 标准库类型 vector
+		- 介绍
+			- 标准库容器之一 使用时需要声明
+				#include <vector>
+				using std::vector;
+			- vector是模板而非类型 使用时需要提供额外信息数据类型T
+		- 定义和初始化vector对象
+			- 操作
+				- vector<T> v;					v是一个空vector容器 按照T类型元素初始化 常用 先创建空容器再逐一添加元素
+				- vector<T> v2(v1);				
+				- vector<T> v2 = v1;
+				- vector<T> v(n,val);
+				- vector<T> v(n);				n个T类型的元素 值为T类型元素初始值
+				- vector<T> v{a,b,c...};
+				- vector<T> v = {a,b,c...};
+		- 向vector对象中添加元素
+			- 操作
+				- v.empty();
+				- v.size();
+				- v.push_back(val);				常用于for循环
+				- v[n]							返回容器第n个位置上元素的引用 注意事项同string s[n]
+				- v1 = v2;
+				- v1 = {a,b,c...};
+				- v1 == v2;						容器所含元素数量相同 每个位置的元素相同（使用数据类型定义的比较方法来比较）
+				- v1 != v2;
+				- < <= > >= 					字典序
+		- 其他vector操作
+			- iterator 
+				- v.begin(), v.end()
+				- ->
+				- begin + (end - begin)/2 or (begin + end)/2
+	- 迭代器介绍
+		- 使用迭代器
+			- 操作
+				- *iter;							解引用 返回迭代器所指元素的引用
+				- iter->mem;						
+					- 相当于 (*iter).mem; 
+					- 解引用不加括号时试图访问迭代器对象的mem成员再解引用 引入新符号避免歧义
+				- ++iter;							返回容器的下一个元素
+				- --iter;							返回容器的上一个元素
+				- iter1 == iter2;
+					- 回顾指针 == 的3种可能：
+						- 都为空
+						- 都指向同一个对象
+						- 都指向同一个对象的下一地址					
+					- 两个迭代器相等的条件：
+						- 都指向同一个对象
+						- 都指向同一个对象的下一地址	
+				- iter1 != iter2;
+			- 移动迭代器
+				- for (auto it=s.begin();it!=s.end();++it) {
+					 *it = toupper(*it); 
+					 }
+				- for (auto it=s.cbegin();it!=s.cend();++it) {
+					 cout << *it; 
+					 } 
+				 cout << endl;
+			 - 迭代器类型
+			 	- C<T>::iterator
+			 	- C<T>::const_iterator 		类似底层const 可以读取不能改值
+		 	- begin和end运算符
+		 		- 如果对象是const的 则返回const_iterator
+		 		- 如果对象不是		  返回iterator
+	 		- 结合解引用和成员访问操作
+	 			- 解引用最好加括号
+			- 某些对vector对象的操作会使迭代器失效
+				- 使用了迭代器的循环体 不要向容器添加元素
+		- 迭代器运算
+			- 操作
+				- iter + n 					从原迭代器的位置向前推进n个位置 得到一个新的迭代器
+				- iter - n 					从原迭代器的位置向后回退n个位置 得到一个新的迭代器
+				- iter += n
+				- iter -= n
+				- iter1 - iter2 			得到距离值
+				- < <= > >= 				同一个容器中迭代器位置的比较
+	- 内置数组
+		- 定义和初始化内置数组
+			- 操作
+				- int a[] = {0,1,2};
+				- int a[3] = {0,1};
+			- 不允许拷贝和赋值
 			- init
-				- int ia[row][col] 二维数组
-				- int ia[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11} or int ia[3][4] = {{0,1,2,3},{4,5,6,7},{8,9,10,11}}
-				- int (*p)[col] = ia 即 int (*p)[col] = &ia[0] //指针默认指向数组的首元素地址
-				- int (&r)[col] = ia[1]
-			- for
-				- for (auto &row : ia) { //除了最内层循环 其他所有循环的控制变量都要求是引用型 否则外层循环中row被解释为int * 即数组首元素的指针 内层循环并不合法
+				- int (*p)[10] = &arr
+				- int (&r)[10] = arr
+		- 访问数组元素
+			- [n] 							size_t类型 和size_type一样需下标范围检查
+		- 指针和数组
+			- 指针也是迭代器
+				- 指针默认指向数组/容器的首元素
+			- 标准库函数begin(arr), end(arr) 非成员函数
+			- 指针运算
+				- 支持所有迭代器运算
+				- 指针相减 得到的值为ptrdiff_t的标准库类型 类似有符号的size_t
+			- 下标和指针
+				- 内置数组的下标运算支持负值
+		- c风格字符串
+	- 多维数组
+		- 数组的数组 不是真正的多维数组
+		- 初始化
+			- int ia[row][col] 二维数组
+			- int ia[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11} or int ia[3][4] = {{0,1,2,3},{4,5,6,7},{8,9,10,11}}
+		- 下标引用
+			- int (*p)[col] = ia 即 int (*p)[col] = &ia[0] 回顾：指针默认指向数组的首元素地址
+			- int (&r)[col] = ia[1]
+		- for
+			- 除了最内层循环 其他所有循环的控制变量都要求是引用型
+				否则外层循环中row被解释为int * 即数组首元素的指针 内层循环并不合法
+		- 类型别名简化多维数组的指针
 - 第四章 表达式
 	- ++
 		- 后++ *p++在循环中是高效的写法
