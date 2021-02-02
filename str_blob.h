@@ -16,7 +16,8 @@ class Str_blob {
     public:
         using sz = vector<string>::size_type;
         sz size() {return data->size();};
-        void push_back(const string& s) {return data->push_back(s);};
+        void push_back(const string& s) { cout << "const string&" << endl; return data->push_back(s);}
+        void push_back(string&& s){ cout << "string&&" << endl; return data->push_back(s);}
         Str_blob_ptr begin();
         Str_blob_ptr end();
         const string& at(const size_t&) const;

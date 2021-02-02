@@ -8,7 +8,6 @@ using namespace std;
 // using namespace std::placeholders;
 #include <numeric>
 #include <iterator>
-#include "csales_data"
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -18,7 +17,6 @@ using namespace std;
 
 int main()
 {
-
     return 0;
     
 }
