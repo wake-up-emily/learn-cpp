@@ -1132,7 +1132,7 @@ c++细节
 				- a.allocate(n);						使用allocator对象a 分配原始的 未构造的n个类型为T的对象的空间 返回p指针
 				- a.deallocate(p,n);					p必须是一个先前allocate返回的指针 n必须是创建时要求的大小
 				- a.construct(p,args);					p指向的原始内存 args传递给类型为T的构造函数来构造对象
-				- a.destroy(p);							对p指向的对象执行析构函数
+				- a.destroy(p);							对p指向的对象执行析构函数 在deallocate()前调用destory()处理元素是程序员的责任 编译器不负责
 			- 伴随算法
 				- uninitilized_copy(b,e,b2);			从一个迭代器范围拷贝到原始内存 返回q指针 最后构造的元素之后的位置
 				- uninitilized_copy(b,n,b2);			从迭代器首元素开始 拷贝n个元素到原始内存
@@ -1271,7 +1271,7 @@ c++细节
 				- 移动构造
 				- 移动赋值
 		- 使用 =default
-			- 显示要求编译器采用合成版本
+			- 显式要求编译器采用合成版本
 			- 只能对有合成版本的成员函数采用=default
 		- 阻止拷贝 =delete
 			- 定义删除的函数
@@ -1303,12 +1303,28 @@ c++细节
 			- eg. unique_ptr 不允许拷贝或赋值
 	- 交换操作 swap
 		- 一个类定义了自己的swap 算法将使用自定义版本 否则使用标准库定义版本（值拷贝而非指针拷贝）
-		- 交换值/指针 一次拷贝 两次赋值
+		- 交换值/指针 就像三元交换变量 一次拷贝 两次赋值
+			- 来自自己：
+				- void swap(T& a, T& b) {
+					T tmp(a);
+					a = b;
+					b = tmp;
+				}
+				- void swap(T& a, T& b) {
+					T tmp(std::move(a));
+					a = std::move(b);
+					b = std::move(tmp);
+				}
+		- swap函数应该调用swap 而不是std::swap
+			- 如果函数内部希望调用自身 而不是std::swap
+				可以显式地告诉编译器 当我想要使用std::swap时 我会跟你说它叫std::swap 否则我说的就是我的swap
+				using std::swap; //显式声明std::swap
+				my_swap(a.v,b.v); //使用自己版本的swap
 		- 在赋值运算中使用swap
 			- 将左值与右值的副本交换
 			- 自动处理了自赋值的情况
 			- 唯一可能抛出异常的地方是new表达式 但即使抛出异常 也是在赋值前发生
-			- 在拷贝和赋值的逻辑中需要循环遍历操作 用swap不太合适 效率更低
+			- 在拷贝和赋值的逻辑中需要循环遍历操作的话 用swap不太合适 效率更低
 	- 拷贝控制示例
 		- 明确是值拷贝还是指针拷贝
 		- 明确拷贝构造和拷贝赋值的逻辑
@@ -1327,6 +1343,24 @@ c++细节
 						- main.cpp文件的头文件引入问题
 					- free中逐一销毁元素使用for_each和lambda有何不同？
 						- 无需移动指针 费心指针增减控制
+				- 拷贝构造
+					- 拷贝操作都会用到的共有操作会封装成私有成员函数
+					- auto dest_first = a.allocate(e-b) 
+						- 返回新分配内存（大小为e-b 类型为指针数据类型）的首元素地址
+					- auto next_first = uninitialized_copy(b,e,dest_first) 
+						- 拷贝从b到e元素到未初始化的 新分配的内存 返回尾后元素地址 
+							其实内部调用的还是construct 
+							construct调用的就是new一个对象
+						- 相比construct好处是不需要自己写循环和后++
+					- a.construct(p,args) 在已分配内存上构造对象 无返回值
+					- 我想需要循环构造就用uninitialized_copy 构造一个元素就用construct 后++
+				- 析构函数
+					- 就像拷贝操作都会用到的共有操作会封装成私有成员函数一样
+						拷贝赋值和销毁类都需要用到的析构操作 可以封装一个私有成员函数free()
+					- a.destroy(p) 相对于a.construct() 用于析构单个指针指向的对象
+						但没有一个封装处理多个元素的destroy 就用for_each + lambda写一下
+						for_each(elements,first_free,[](string& s)->void{a.destroy(&s);});
+					- a.deallocate(p,n) 借的时候要多少内存 会返回一个首元素指针（借的凭证） 还的时候你要拿着凭证和还多少一起还
 				- 剧透：
 					- 实现一个简易vector仅需要3根指针
 					- 实现一个简易string仅需要1根指针
