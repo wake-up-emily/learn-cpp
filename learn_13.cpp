@@ -13,10 +13,10 @@ using namespace std;
 #include <string>
 #include <set>
 // #include "folder.cpp"
-// #include "text_query_result_str_vec.cpp"
-#include "my_string.cpp"
-#include "str_vec.cpp"
-#include "str_blob_ptr.cpp"
+#include "text_query_result_str_vec.cpp"
+// #include "my_string.cpp"
+// #include "str_vec.cpp"
+// #include "str_blob_ptr.cpp"
 
 //13.13
 struct X {
@@ -272,13 +272,17 @@ void run_Has_ptr_ref() {
 
 // void run_str_vec_pre() {
 //     Str_vec svec{"letting","go"};
+//     svec.reserve(2);
 //     cout << svec.size() << endl;
 //     cout << *svec.begin() << endl;
 //     cout << *(svec.end()-1) << endl;
 //     svec.push_back("unseen");
+//     svec.push_back("elem");
 //     cout << *(svec.end()-1) << endl;
-//     svec.resize(2);
-//     cout << *(svec.end()-1) << endl;
+//     svec.resize(4);
+//     for (auto elem:svec) {
+//         cout << elem << endl;
+//     }
 // }
 
 // void run_str_vec() {
@@ -287,9 +291,10 @@ void run_Has_ptr_ref() {
 //     vector<string> svec{"are","blue"};
 //     Text_query_str_vec tq(fin);
 //     print(cout,tq.query(s)); //前置声明报错可能是某些成员的const有问题
-//     // cout << tq.show_file_size() << endl;
-//     // cout << *tq.get_file()->begin() << endl;
-//     // cout << *(tq.get_file()->end()-1) << endl;
+//     cout << tq.show_file_size() << endl;
+//     cout << *tq.get_file()->begin() << endl;
+//     cout << *(tq.get_file()->end()-1) << endl;
+//     cout << tq.get_file()->at(1) << endl;
 // }
 
 // void run_my_string() {
@@ -306,20 +311,20 @@ void run_Has_ptr_ref() {
 // }
 
 //13.48
-void run_13_48() {
-    vector<My_string> svec;
-    svec.reserve(4);
-    My_string s("a new string"); //
-    svec.push_back(s); //拷贝构造
-    My_string s2 = s; //拷贝构造
-    svec.push_back(s2); //拷贝构造
-    svec.push_back(My_string("another new string")); //移动构造
-    svec.push_back(std::move(s)); //移动构造
+// void run_13_48() {
+//     vector<My_string> svec;
+//     svec.reserve(4);
+//     My_string s("a new string"); //
+//     svec.push_back(s); //拷贝构造
+//     My_string s2 = s; //拷贝构造
+//     svec.push_back(s2); //拷贝构造
+//     svec.push_back(My_string("another new string")); //移动构造
+//     svec.push_back(std::move(s)); //移动构造
 
-    //超过reserve空间 svec 重新分配了一个空间 并使用移动构造搬过去
-    svec.push_back("plus"); //移动构造
-    //增加移动操作后 最后一个push_back的参数是右值引用 构造时使用了移动构造
-}
+//     //超过reserve空间 svec 重新分配了一个空间 并使用移动构造搬过去
+//     svec.push_back("plus"); //移动构造
+//     //增加移动操作后 最后一个push_back的参数是右值引用 构造时使用了移动构造
+// }
 
 class Foo{
     public:
@@ -390,6 +395,7 @@ int main()
 
     //13.39
     // run_str_vec_pre();
+    // run_str_vec();
 
     //13.44
     // run_my_string();

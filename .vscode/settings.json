@@ -54,7 +54,8 @@
         "atomic": "cpp",
         "cstdlib": "cpp",
         "complex": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "__cxx_version": "cpp"
     },
     "files.exclude": {
 

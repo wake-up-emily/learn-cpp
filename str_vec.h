@@ -23,11 +23,11 @@ class Str_vec {
         size_t capacity() {return cap - elements; }
         string* begin() {return elements;}
         string* end() {return first_free;}
+        string at(const size_t&);
         void push_back(const string&); //调用check_n_alloc确保至少有一个可用空间 如果没有reallocate后添加新元素
         void push_back(string&&);
         void reserve(const size_t&);
         void resize(const size_t&,const string&);
-        const string& at(const size_t&) const;
     private:
         static allocator<string> alloc; //static成员变量需要类外定义 类内没有初始化 会报错头文件引入问题
         // allocator<string> alloc;

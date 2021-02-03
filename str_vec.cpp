@@ -2,12 +2,57 @@
 using std::uninitialized_copy;
 using std::runtime_error;
 
-allocator<string> Str_vec::alloc;
+allocator<string> Str_vec::alloc; //静态成员对象的类外定义
+
+inline std::pair<string*,string*> 
+Str_vec::alloc_n_copy(const string* b,const string* e) {
+    string* data = alloc.allocate(e - b);
+    return {data,uninitialized_copy(b,e,data)}; //返回copy后的首元素和尾元素之后的元素
+}
 
 inline Str_vec::Str_vec(const initializer_list<string>& il) {
     std::pair<string*,string*> data = alloc_n_copy(il.begin(),il.end());
     elements = data.first;
     cap = first_free = data.second;
+}
+
+inline void Str_vec::reallocate() {
+    size_t new_capacity = size() ? 2*size() : 1; //得到两倍空间大小 或初始分配内存大小
+
+    string* new_data = alloc.allocate(new_capacity); //分配两倍空间大小
+
+    auto dest = new_data; //指向下一个空间位置
+    auto elem = elements; //指向下一个元素
+    // for (size_t i=0; i < size(); ++i) { //把每个元素搬到新地址
+    //     alloc.construct(dest++,std::move(*elem++)); //和push_back类似 这里用了右值引用类型的参数 会调用移动构造 更快
+    // }
+    cout << "reallocate" << endl;
+
+    string* next_first = uninitialized_copy(elements,cap,new_data); //因为这个函数底层调用的还是construct 其实调用这个函数也行
+
+    free(); //搬完清场
+
+    elements = new_data;
+    first_free = next_first; //next_first可以 但是elements+size()不可 需要elements+size()+2...因为free之后size()清空了哈哈
+    cout << (next_first - elements) << endl;
+    // first_free = dest;
+    cap = elements + new_capacity;
+}
+
+inline void Str_vec::reallocate(const size_t& new_capacity) {
+    string* new_data = alloc.allocate(new_capacity); //分配两倍空间大小
+
+    auto dest = new_data; //指向下一个空间位置
+    auto elem = elements; //指向下一个元素
+    for (size_t i=0; i < size(); ++i) { //把每个元素搬到新地址
+        alloc.construct(dest++,std::move(*elem++)); //和push_back类似
+    }
+
+    free(); //搬完清场
+
+    elements = new_data;
+    first_free = dest;
+    cap = elements + new_capacity;
 }
 
 inline void Str_vec::push_back(const string& s) {
@@ -22,11 +67,6 @@ inline void Str_vec::push_back(string&& s) {
     cout << "push_back(string&&)" << endl;
 }
 
-inline std::pair<string*,string*> 
-Str_vec::alloc_n_copy(const string* b,const string* e) {
-    string* data = alloc.allocate(e - b);
-    return {data,uninitialized_copy(b,e,data)}; //返回copy后的首元素和尾元素之后的元素
-}
 
 // inline void Str_vec::free() {
 //     if (elements) { //不能传给deallocate空指针 传空指针则什么也不做
@@ -80,34 +120,6 @@ inline Str_vec& Str_vec::operator=(Str_vec&& rhs) noexcept {
     return *this;
 }
 
-inline void Str_vec::reallocate() {
-    size_t new_capacity = size() ? 2*size() : 1; //得到两倍空间大小
-    string* new_data = alloc.allocate(new_capacity); //分配两倍空间大小
-    auto dest = new_data; //指向下一个空间位置
-    auto elem = elements; //指向下一个元素
-    for (size_t i=0; i < size(); ++i) { //把每个元素搬到新地址
-        alloc.construct(dest++,std::move(*elem++)); //和push_back类似 这里用了右值引用类型的参数 会调用移动构造 更快
-    }
-    free(); //搬完清场
-    elements = new_data;
-    first_free = dest;
-    cap = elements + new_capacity;
-}
-
-inline void Str_vec::reallocate(const size_t& new_capacity) {
-    string* new_data = alloc.allocate(new_capacity); //分配两倍空间大小
-    auto dest = new_data; //指向下一个空间位置
-    auto elem = elements; //指向下一个元素
-    for (size_t i=0; i < size(); ++i) { //把每个元素搬到新地址
-        alloc.construct(dest++,std::move(*elem++)); //和push_back类似
-    }
-    free(); //搬完清场
-    elements = new_data;
-    first_free = dest;
-    cap = elements + new_capacity;
-
-}
-
 inline void Str_vec::reserve(const size_t& sz) {
     if (sz > capacity()) {
         reallocate(sz);
@@ -125,14 +137,15 @@ inline void Str_vec::resize(const size_t& sz,const string&s = std::string()) {
     }
     //否则丢弃末尾元素使 c.size() = n
     // for (auto p=first_free;p!=elements+sz;) {
-    while (size() > sz) {
+    else{
+        while (size() > sz) {
         alloc.destroy(--first_free); //对对象中元素逆序析构
+        }
     }
 }
 
-inline const string& Str_vec::at(const size_t& sz) const {
-    size_t max_diff = cap - elements;
-    if (sz < max_diff) {
+inline string Str_vec::at(const size_t& sz) {
+    if (sz < size()) {
         return *(elements + sz);
     }
     throw runtime_error("index out of range");
