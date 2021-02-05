@@ -55,7 +55,8 @@
         "cstdlib": "cpp",
         "complex": "cpp",
         "new": "cpp",
-        "__cxx_version": "cpp"
+        "__cxx_version": "cpp",
+        "istream": "cpp"
     },
     "files.exclude": {
 
