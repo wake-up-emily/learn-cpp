@@ -56,7 +56,10 @@
         "complex": "cpp",
         "new": "cpp",
         "__cxx_version": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "ios": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     },
     "files.exclude": {
 
@@ -99,5 +102,6 @@
         },
         
         "search.followSymlinks": false,
+        "C_Cpp.dimInactiveRegions": false,
         // "C_Cpp.intelliSenseEngine": "Disabled"
 }
