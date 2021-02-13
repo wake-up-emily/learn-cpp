@@ -18,7 +18,7 @@ c++细节
 		- 类型转换
 			- 带符号 无符号
 				- 注意不要混用带符号型和无符号型
-				- 不要在循环判定中使用无符号类型 尤其是 --i 这种操作 无符号类型
+				- 无符号和负数判断时不能在一起 无符号数总是小于一个负数 不要在循环判定中使用无符号类型 尤其是 --i 这种操作 无符号类型
 		- 字面值常量
 			- 整数和浮点型字面值
 				- 8进制 0开头
@@ -109,7 +109,7 @@ c++细节
 				- T v{}, *p = &v;
 				- T* p1,p2; 这种写法合法 但看上去会误以为本条定义中的所有变量都是T型指针 其实p2是T型对象 不是指针
 				- T* p1;
-				- T* p2; 这样分开写就比较清晰
+				- T p2; 这样分开写就比较清晰
 			- 指向指针的
 				- 指针 ** ***
 				- 引用 不仅改变指针所指的对象 也改变指针本身 （因为指向指针的引用就代表了指针）
@@ -155,13 +155,13 @@ c++细节
 					- 回顾顶层const的语法：定义时在变量名前加一个const
 					- 当有类型别名时
 						- 类型别名含const 底层const
-						- 类型别名不含const 非底层const
-							定义时在类型别名前加一个const
+						- 类型别名不含const 定义时在类型别名前加一个const 顶层const
+						- 可以说 使用类型别名时 底层const如果有的话 会在类型别名里指定 别名之外就是顶层const
 					- using int_ptr = int*;
 					    int i(42), i2(1024);
 					    const int_ptr p = &i;
-					    // p = &i2; //底层const可以指向别的对象 这里不可
-					    *p = 1024; //顶层const可以改值 这里可
+					    // p = &i2; //顶层const不能指向别的对象 编译不通过
+					    *p = 1024; //顶层const可以改值 编译通过
 					    cout << *p << endl; //1024
 				    - using int_ptr = const int*;
 					    int i(42), i2(1024);
@@ -207,7 +207,7 @@ c++细节
 				- s.empty();					bool
 				- s.size();						string::size_type 一个无符号值 
 					- 不要混用size_type和int 强转类型时负数int会转成一个很大的正数 因此无符号数总是小于一个负数
-					- size_type和size_t的区别
+					- 来自互联网：size_type和size_t的区别
 						- size_t is defined as the type used for the size of an object and is platform dependent.
 						- container::size_type is the type that is used for the number of elements in the container and is container dependent.
 						- All std containers use size_t as the size_type, but each independent library vendor chooses a type that it finds appropriate for its container.
@@ -216,7 +216,10 @@ c++细节
 					- 返回s字符串第n个位置的引用 位置从0开始计数
 					- string::size_type n 实际使用时需要检查n是否<s.size()
 				- s1 + s2;
-						string p2 = "hello " + "world " + s 就不行						
+					- string p2 = "hello " + "world " + s 不行
+					- 因为按照运算符重载的法则 两个运算对象其一必须是string类型才能用string类型的+运算符重载
+					- s1 + "hello" 可
+					- "hello" + "world" 不可						
 				- s1 = s2;
 				- s1 == s2;						长度相同 包含字符也相同
 				- s1 != s2;
@@ -271,7 +274,7 @@ c++细节
 			- iterator 
 				- v.begin(), v.end()
 				- ->
-				- begin + (end - begin)/2 or (begin + end)/2
+				- begin + (end - begin)/2 or (begin + end)/2 前者 代表距离移动 后者加法无意义
 	- 迭代器介绍
 		- 使用迭代器
 			- 操作
@@ -325,6 +328,9 @@ c++细节
 			- init
 				- int (*p)[10] = &arr
 				- int (&r)[10] = arr
+				- 数组指针一定要加括号
+					- int (*p)[10] 指针指向10个int元素的数组
+					- int *p[10] == int* p[10] 一个数组 元素是10个int型指针
 		- 访问数组元素
 			- [n] 							size_t类型 和size_type一样需下标范围检查
 		- 指针和数组
@@ -343,19 +349,19 @@ c++细节
 			- int ia[row][col] 二维数组
 			- int ia[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11} or int ia[3][4] = {{0,1,2,3},{4,5,6,7},{8,9,10,11}}
 		- 下标引用
-			- int (*p)[col] = ia 即 int (*p)[col] = &ia[0] 回顾：指针默认指向数组的首元素地址
-			- int (&r)[col] = ia[1]
+			- int (*p)[col] = ia 即 int (*p)[col] = &ia[0][col] 回顾：指针默认指向数组的首元素地址
+			- int (&r)[col] = ia[1] 把含col个元素的r绑定到同样每行具有col个元素的ia的第二行上
 		- for
 			- 除了最内层循环 其他所有循环的控制变量都要求是引用型
 				否则外层循环中row被解释为int * 即数组首元素的指针 内层循环并不合法
-		- 类型别名简化多维数组的指针
+		- 类型别名可以简化多维数组的指针
 - 第四章 表达式
 	- ++
-		- 后++ *p++在循环中是高效的写法
+		- 后++ *p++在循环中是高效的写法 返回值后++
 	- 逻辑运算符
 	- 位运算符 & | ^(异或 11=0 其余为1)
 	- 左移右移
-	- sizeof
+	- sizeof 	返回一个表达式或一个类型名字所占的字节数
 	- 类型转换
 		- 强转
 			- static_cast
@@ -397,9 +403,10 @@ c++细节
 				- void print(const int arr[]) 等价于 void print(const int arr[10]) 实参都是 const int * 类型的
 			- 传引用
 			- 传多维数组
-				- int (*matrix)[10] 代表一个指针指向int[10]的数组
-				- int *matrix[10] 	代表一个数组 包含10个int型的元素
-				- int matrix[][10] 	代表一个数组 包含10个int型的元素
+				- 回顾
+					- int (*matrix)[10] 代表一个指针指向int[10]的数组
+					- int *matrix[10] 	代表一个数组 包含10个int型的指针
+					- int matrix[][10] 	代表一个指针指向int[10]的数组 因为编译器会忽略第一个维度
 		- main 命令行debug argc argv参数
 		- 可变形参
 		- 省略符形参
@@ -596,7 +603,7 @@ c++细节
 				- C seq(n,t); 包含n个元素，元素值为t
 			- swap
 				- a.swap(b);
-				- swap(a,b); 通常比a.swap(b)快得多
+				- swap(a,b); 通常比a.swap(b)快得多 原因见下
 			- 大小
 				- c.size(); forward_list不支持
 				- c.empty();
@@ -786,7 +793,12 @@ c++细节
 			- 参数绑定
 				- bind
 					- 占位符
+						- void Foo(arg1,arg2);
+							bind(Foo,_1,arg2);
 					- 绑定引用参数 ref(param) cref(param)	
+						- lambda中捕获引用型参数 比如ostream& os
+							ostream& print(ostream& os, const string& s, char c);
+							bind(print,ref(os),_1,arg2);
 	- 再探迭代器
 		- 插入迭代器
 		- 流迭代器
@@ -813,7 +825,7 @@ c++细节
 		- 算法形参模式
 			- alg(beg,end,...)
 			- alg(beg,end,dest,...) 要求dest迭代器的算法都默认无论写入多少数据目标空间都可容纳 一般是插入迭代器或ostream_ieterator
-			- alg(beg,end,beg2,...)
+			- alg(beg,end,beg2,...) 比如transform beg2也可以是beg1原址改造
 			- alg(beg,end,beg2,end2,...)
 		- 算法命名规范
 			- 一些算法通过重载形式传递一个谓词
@@ -946,7 +958,7 @@ c++细节
 		- 对关键字的要求
 			- 自定义类型的关键字需要自己提供哈希重载作为参数传到哈希模板
 				- ==
-				- hasher函数重载
+				- hasher函数重载		
 - 第十二章 动态内存
 	- 动态内存与智能指针
 		- 介绍
@@ -1132,7 +1144,7 @@ c++细节
 				- a.allocate(n);						使用allocator对象a 分配原始的 未构造的n个类型为T的对象的空间 返回p指针
 				- a.deallocate(p,n);					p必须是一个先前allocate返回的指针 n必须是创建时要求的大小
 				- a.construct(p,args);					p指向的原始内存 args传递给类型为T的构造函数来构造对象
-				- a.destroy(p);							对p指向的对象执行析构函数 在deallocate()前调用destory()处理元素是程序员的责任 编译器不负责
+				- a.destroy(p);							对p指向的对象执行析构函数
 			- 伴随算法
 				- uninitilized_copy(b,e,b2);			从一个迭代器范围拷贝到原始内存 返回q指针 最后构造的元素之后的位置
 				- uninitilized_copy(b,n,b2);			从迭代器首元素开始 拷贝n个元素到原始内存
@@ -1175,14 +1187,15 @@ c++细节
 								- 需要使用到其他类的具体操作时 应该在其他类的.cpp文件 也就是其他类的定义之后实现接口定义
 								- 局部变量的返回值不能是引用
 								- 需要修改原值时返回值必须是引用 尤其是拷贝赋值
-								- 函数名最好能看得出函数是否改变类的数据 如果不改变一定要加const 共享数据 连续调用时发现某一环不是const再去改就还挺麻烦
+								- 函数名最好能看得出函数是否改变类的数据 如果不改变一定要加const 共享数据 
+									连续调用时发现某一环不是const再去改就还挺麻烦
 									- 常见错误
 										the object has type qualifiers that are not compatible with the member function "Str_blob::at" -- object type is: const Text_query_blob::str_blob
 							- private区的数据可以是一个函数的返回对象
 							- 学会写操作符重载的替代函数
 								- ++ * 是成员函数
 								- 比大小 == != 是友元函数
-									- == 两个迭代器相等的条件：
+									- == 回顾两个迭代器相等的条件：
 										- 要么都是空智能指针 都不指向任何对象
 										- 要么指向同一个对象的同一个位置
 						- 学会使用shared_ptr共享数据
@@ -1237,7 +1250,7 @@ c++细节
 			- 拷贝初始化的限制
 				- explicit 如果直接初始化被定义为explicit 会限制拷贝构造
 			- 编译器可以绕过拷贝构造
-				- 编译器可以（但不是必须）将代码改写为直接初始化的形式
+				- 编译器可以（但不是必须）将代码改写为直接初始化的形式（但拷贝/移动构造函数必须是存在且可访问的）
 		- 拷贝赋值
 			- 重载赋值运算符
 				- 为了与内置类型的赋值保持一致 赋值运算符通常返回一个左值引用
@@ -1386,6 +1399,9 @@ c++细节
 					- 关系
 					- 位
 					- 后置递增递减运算符
+				- 来自自己：
+					- 左值 重要的 关心的 谨慎的 即使是常值引用 也会先拷贝一份地址 长久的
+					- 右值 不重要的 不关心的 无所谓的 临时的 孤单的 没有其他对象的 可以随意更改的 掏空后置空已经是最大的仁慈
 			- 标准库move函数
 				- 使用std::move()表示我们有一个左值 但希望像右值一样处理它
 				- 调用std::move(rr1)意味着 除了对rr1赋值或销毁 我们将不再使用它
@@ -1429,7 +1445,7 @@ c++细节
 				- 为什么unique_ptr不允许拷贝操作 但在函数中返回unique_ptr的值是合法的？
 					- 因为unqiue_ptr支持移动操作 调用了移动构造
 			- 来自自己：
-				- 移动操作和拷贝操作的不同：
+				- 移动操作和拷贝操作实现的不同：
 					- 移动操作需要声明noexcept
 					- 拷贝需要分配内存 移动不需要
 					- 移动需要安全析构右值 拷贝不需要
@@ -1553,7 +1569,7 @@ c++细节
 					- f(args)								调用f中的对象 参数是args
 				- 重载函数与function
 					- 不能直接把有重载函数的名字存入function类的对象中
-					- 放指针 根据map或使用时要求的调用形式会调用到正确的那个重载函数 
+					- 放指针 根据map或使用时要求的调用形式会调用到正确的那个重载函数
 					- 或者放lambda
  	- 重载 类型转换与运算符
  		- 类型转换运算符
